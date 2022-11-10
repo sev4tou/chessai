@@ -384,3 +384,4 @@ void Window::buttonPress(GtkWidget *widget, GdkEventButton *event) {
 }
 
 void Window::motionNotify(GtkWidget *widget, GdkEventMotion *event) {
+}
