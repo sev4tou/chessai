@@ -69,9 +69,15 @@ struct Board {
 			case PIECE::PAWN:
 				if(y1-y2==2||y1-y2==-2) upEnpassant(!getWhiteTurn(), x1);
 				if(getPiece(x2,y2)==0&&x2!=x1) setPiece(x2,y1,0);
+				if(y2==7 || y2==0)
+					setPiece(x1,y1, (getPiece(x1,y1)&0b1000) | flg[3]);
 				break;
 			case PIECE::KING:
 				upKingMoved(!getWhiteTurn());
+				if(x1-x2 == -2)
+					setPiece(5, y1, getPiece(7, y1)); 
+				else if(x1-x2 == 2)
+					setPiece(3, y1, getPiece(0, y1));
 				break;
 			case PIECE::ROOK:
 				if(y1 == ((getPiece(x1, y1)&0b1000)?0:7))
@@ -535,7 +541,17 @@ struct GameWindow : public Window {
 					if(moveList[it]==0b11111111)continue;
 					if(moveList[it] == ((i<<3)|j)) break;
 				}
-				if(it<32) board.move(oldi, oldj, i, j);
+				if(it<32) {
+					switch(board.getPiece(oldi, oldj)) {
+						case PIECE::PAWN|0b1000:
+							if(j==0) board.flg[3]=promtPromotion(widget);
+							break;
+						case PIECE::PAWN:
+							if(j==7) board.flg[3]=promtPromotion(widget);
+							break;
+					}
+					board.move(oldi, oldj, i, j);
+				}
 			}
 		}
 		else if(event->button == 3) {
@@ -544,6 +560,15 @@ struct GameWindow : public Window {
 		}
 		redraw();
 		gtk_widget_queue_draw(widget);
+	}
+
+	int promtPromotion(GtkWidget *widget) {
+		GtkDialog *dialog = GTK_DIALOG(gtk_dialog_new_with_buttons("Promotion", NULL, GTK_DIALOG_DESTROY_WITH_PARENT, "KNIGNT", 
+					PIECE::KNIGHT, "BISHOP", PIECE::BISHOP, "ROOK", PIECE::ROOK, "QUEEN", PIECE::QUEEN, NULL));
+		int result = gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(GTK_WIDGET(dialog));
+		return result;
+
 	}
 };
 
